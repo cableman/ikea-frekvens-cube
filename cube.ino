@@ -169,7 +169,7 @@ void program3()
 {
   int offsetRows = 6;
   int speed = 150;
-  
+ 
   for (int offsetCols = -6; offsetCols < 16+8; ++offsetCols) {
     panel.clear();
 
