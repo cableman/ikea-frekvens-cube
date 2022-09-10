@@ -180,7 +180,7 @@ void program3()
     // Padd the hour with a space if the frist number is 1.
     panel.setCursor(0, 4);
     panel.print(myTZ.dateTime("H"));
-  
+
     panel.setCursor(9, 4);
     panel.print(myTZ.dateTime("i"));
    
