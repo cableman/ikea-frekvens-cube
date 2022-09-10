@@ -15,32 +15,41 @@
 #define p_btn1 D3 // YELLOW button (white wire)
 #define p_btn2 D4 // RED button (black wire)
 
-Timezone myTZ;
-
 FrekvensPanel panel(p_latch, p_clock, p_data);
-
 LemmingFrames lemming1;
+LemmingFrames lemming2;
 
-void connectWifi() {
+/**
+ * Connect to wifi network.
+ * 
+ * Creds should be set in wifi.h.
+ */
+void connectWifi() 
+{
   WifiCreds wifiCreds;
   
-  bool state = true;
   WiFi.begin(wifiCreds.ssid, wifiCreds.password);
+
+  bool state = true;
   while (WiFi.status() != WL_CONNECTED) {    
     panel.clear();
     panel.setCursor(0, 4);
     panel.println("WIFI!");
     if (state) {
-      panel.println("...");
-      state = !state;
+      panel.println("WAIT");
     }
     panel.scan();
-
+    state = !state;
     delay(400);
   }
 }
 
-void connectTime() {
+/**
+ * Connect to NTP time server.
+ */
+Timezone myTZ;
+void connectTime() 
+{
   panel.clear();
   panel.setCursor(0, 4);
   panel.print("Time");
@@ -50,6 +59,25 @@ void connectTime() {
   waitForSync();
 }
 
+/**
+ * Test if current program should be halted (program switch).
+ */
+bool breakProgram = false;
+bool stopProgram() 
+{
+  if (breakProgram) {
+    breakProgram = false;
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * The brightness can be controlled by button presses.
+ * 
+ * The is the halder for that.
+ */
 char activeBrightMode = 1;
 void setBrightMode(int brightMode)
 {
@@ -57,18 +85,25 @@ void setBrightMode(int brightMode)
   switch(activeBrightMode)
   {
     case 0: { pinMode(p_ena, OUTPUT); digitalWrite(p_ena, 1); } break; // off
-    case 1: analogWrite(p_ena, 240); break; // very dim
-    case 2: analogWrite(p_ena, 150); break; // dim
+    case 1: analogWrite(p_ena, 200); break; // very dim
+    case 2: analogWrite(p_ena, 100); break; // dim
     case 3: { pinMode(p_ena, OUTPUT); digitalWrite(p_ena, 0); } break; // on 100%
   }
 }
 
+/**
+ * Set active program.
+ */
 char activeProgram = 3;
 void setProgram(int program)
 {
   activeProgram = (program % 4);
+  breakProgram = true;
 }
 
+/**
+ * Lemmings walking. 
+ */
 void program0()
 {
   const int speed = 150;
@@ -76,6 +111,10 @@ void program0()
 
   for (int offsetCols = -6; offsetCols < 16+8; ++offsetCols) {
     panel.clear();
+
+    if (stopProgram()) {
+      break;
+    }
     
     lemming1.nextFrame(panel, offsetRows, offsetCols);
 
@@ -86,6 +125,9 @@ void program0()
   }
 }
 
+/**
+ * Rotating triangle.
+ */
 int p1_i = 0;
 void program1()
 {
@@ -107,6 +149,9 @@ void program1()
   panel.scan();
 }
 
+/**
+ * Random sparkels.
+ */
 void program2()
 {
   for (int i=0;i<20;i++)
@@ -114,9 +159,12 @@ void program2()
     panel.drawPixel(random(16),random(16),random(10) == 0);
   }
   panel.scan();
+  delay(5);
 }
 
-bool state = true;
+/**
+ * Display time and working lemming.
+ */
 void program3()
 {
   int offsetRows = 6;
@@ -125,7 +173,15 @@ void program3()
   for (int offsetCols = -6; offsetCols < 16+8; ++offsetCols) {
     panel.clear();
 
+    if (stopProgram()) {
+      break;
+    }
+
+    // Padd the hour with a space if the frist number is 1.
     panel.setCursor(0, 4);
+    if (10 < hour() && 20 > hour()) {
+      panel.setCursor(1, 4);      
+    }
     panel.print(myTZ.dateTime("H"));  
   
     panel.setCursor(9, 4);
@@ -133,26 +189,33 @@ void program3()
    
     lemming1.nextFrame(panel, offsetRows, offsetCols);
 
-    // refreshes display
+    // Refreshes display.
     panel.scan();
   
     delay(speed);
   }
-
-   
-   panel.scan();
 }
 
+/**
+ * Yellow button interrupt handler.
+ */
 IRAM_ATTR void handleInterruptYellow() {
   setProgram(activeProgram+1);
 }
 
+/**
+ * Red button interrupt handler.
+ */
 IRAM_ATTR void handleInterruptRed() {
   setBrightMode(activeBrightMode-1);
 }
 
+/**
+ * Setup and get the show running.
+ */
 void setup() 
 {
+  // Clear panel and setup font.
   panel.clear();
   panel.scan();
   panel.setFont(&Picopixel);
@@ -175,6 +238,9 @@ void setup()
   connectTime();
 }
 
+/**
+ * Main loop selecting active program.
+ */
 void loop() 
 {
   switch(activeProgram)
