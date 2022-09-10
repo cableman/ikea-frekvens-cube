@@ -2,7 +2,7 @@
 #include <ezTime.h>
 
 #include <Adafruit_GFX.h>
-#include <Fonts/Picopixel.h>
+#include "Picopixel.h"
 
 #include "FrekvensPanel.h"
 #include "lemming_frames.h"
@@ -179,10 +179,7 @@ void program3()
 
     // Padd the hour with a space if the frist number is 1.
     panel.setCursor(0, 4);
-    if (10 < hour() && 20 > hour()) {
-      panel.setCursor(1, 4);      
-    }
-    panel.print(myTZ.dateTime("H"));  
+    panel.print(myTZ.dateTime("H"));
   
     panel.setCursor(9, 4);
     panel.print(myTZ.dateTime("i"));
