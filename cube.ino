@@ -6,6 +6,7 @@
 
 #include "FrekvensPanel.h"
 #include "lemming_frames.h"
+#include "wifi.h"
 
 #define p_ena D5
 #define p_data D0
@@ -15,34 +16,11 @@
 #define p_btn1 D3 // YELLOW button (white wire)
 #define p_btn2 D4 // RED button (black wire)
 
+Wifi wifi;
+
 FrekvensPanel panel(p_latch, p_clock, p_data);
 LemmingFrames lemming1;
 LemmingFrames lemming2;
-
-/**
- * Connect to wifi network.
- * 
- * Creds should be set in wifi.h.
- */
-void connectWifi() 
-{
-  WifiCreds wifiCreds;
-  
-  WiFi.begin(wifiCreds.ssid, wifiCreds.password);
-
-  bool state = true;
-  while (WiFi.status() != WL_CONNECTED) {    
-    panel.clear();
-    panel.setCursor(0, 4);
-    panel.println("WIFI!");
-    if (state) {
-      panel.println("WAIT");
-    }
-    panel.scan();
-    state = !state;
-    delay(400);
-  }
-}
 
 /**
  * Connect to NTP time server.
@@ -52,7 +30,7 @@ void connectTime()
 {
   panel.clear();
   panel.setCursor(0, 4);
-  panel.print("Time");
+  panel.print("TIME");
   panel.scan();
 
   myTZ.setLocation("Europe/Copenhagen");
@@ -229,7 +207,7 @@ void setup()
   attachInterrupt(digitalPinToInterrupt( p_btn2 ), handleInterruptRed, FALLING );
 
   // Connect to WIFI.
-  connectWifi();
+  wifi.connect(panel);
 
   // Connect to time servers.
   connectTime();
