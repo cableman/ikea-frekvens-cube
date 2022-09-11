@@ -2,7 +2,7 @@
 #include <ezTime.h>
 
 #include <Adafruit_GFX.h>
-#include "Picopixel.h"
+#include "fonts/Picopixel.h"
 
 #include "FrekvensPanel.h"
 #include "lemming_frames.h"
@@ -75,7 +75,7 @@ void setBrightMode(int brightMode)
 char activeProgram = 3;
 void setProgram(int program)
 {
-  activeProgram = (program % 4);
+  activeProgram = (program % 6);
   breakProgram = true;
 }
 
@@ -155,7 +155,6 @@ void program3()
       break;
     }
 
-    // Padd the hour with a space if the frist number is 1.
     panel.setCursor(0, 4);
     panel.print(myTZ.dateTime("H"));
 
@@ -168,6 +167,56 @@ void program3()
     panel.scan();
   
     delay(speed);
+  }
+}
+
+/**
+ * Simple clock display.
+ */
+void program4()
+{
+  panel.setFont();
+  while(!stopProgram()) {
+    panel.clear();
+
+    String hour = myTZ.dateTime("H");
+    hour.replace("0", "O");
+    
+    panel.setCursor(0, 0);
+    panel.print(hour);
+
+    panel.setCursor(4, 8);
+    panel.print(myTZ.dateTime("i"));
+   
+    // Refreshes display.
+    panel.scan();
+  
+    delay(500);
+  }
+
+  panel.setFont(&Picopixel);
+}
+
+/**
+ * Display date
+ */
+void program5()
+{
+  while(!stopProgram()) { 
+    panel.clear();
+
+    panel.setCursor(0, 5);
+    panel.print(myTZ.dateTime("d"));
+    panel.setCursor(9, 5);
+    panel.print(myTZ.dateTime("m"));
+
+    panel.setCursor(0, 12);
+    panel.print(myTZ.dateTime("Y"));
+   
+    // Refreshes display.
+    panel.scan();
+  
+    delay(500);
   }
 }
 
@@ -203,8 +252,8 @@ void setup()
   // Button setup.
   pinMode(p_btn1, INPUT); 
   pinMode(p_btn2, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt( p_btn1 ), handleInterruptYellow, FALLING ); 
-  attachInterrupt(digitalPinToInterrupt( p_btn2 ), handleInterruptRed, FALLING );
+  attachInterrupt(digitalPinToInterrupt( p_btn1 ), handleInterruptYellow, FALLING); 
+  attachInterrupt(digitalPinToInterrupt( p_btn2 ), handleInterruptRed, FALLING);
 
   // Connect to WIFI.
   wifi.connect(panel);
@@ -224,5 +273,7 @@ void loop()
     case 1: program1(); break;
     case 2: program2(); break;
     case 3: program3(); break;
+    case 4: program4(); break;
+    case 5: program5(); break;
   }
 }
